@@ -7,6 +7,11 @@ import '../widgets/scan_result_widget.dart';
 import '../widgets/unsupported_platform_widget.dart';
 import '../widgets/writer_loop_widget.dart';
 
+import 'dart:convert';
+import 'package:base32/base32.dart';
+
+Map<String, int> headerSize = {'mode': 1, 'chunk': 7, 'chunks': 7};
+
 class QRView extends StatefulWidget {
   const QRView({Key? key}) : super(key: key);
 
@@ -129,6 +134,7 @@ class _QRViewState extends State<QRView> {
   _onMultiScanSuccess(Codes codes) {
     setState(() {
       successScans++;
+      Map<String, dynamic> payload = decodeData(codes.codes[0].text.toString());
       multiResult = codes;
     });
   }
@@ -161,5 +167,27 @@ class _QRViewState extends State<QRView> {
       successScans = 0;
       failedScans = 0;
     });
+  }
+
+  Map<String, dynamic> decodeData(String data) {
+    final header = <String, int>{};
+    final payload = <int>[];
+    try {
+      final content = base32.decode(data.replaceAll('%', '='));
+      var cursor = 0;
+      for (final key in headerSize.keys) {
+        final size = headerSize[key]!;
+        header[key] = bytesToInt(content.sublist(cursor, cursor + size));
+        cursor += size;
+      }
+      payload.addAll(content.sublist(cursor));
+    } on FormatException {
+      throw ArgumentError('QR code is not in a valid format');
+    }
+    return {'header': header, 'payload': utf8.decode(payload)};
+  }
+
+  int bytesToInt(List<int> bytes) {
+    return bytes.fold(0, (result, byte) => (result << 8) + byte);
   }
 }
