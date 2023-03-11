@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
@@ -30,6 +32,9 @@ class _QRViewState extends State<QRView> {
   bool showDebugInfo = true;
   int successScans = 0;
   int failedScans = 0;
+  List<String> spendbundle = [];
+  int totalSegments = 0;
+  int collectedSegments = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +139,23 @@ class _QRViewState extends State<QRView> {
   _onMultiScanSuccess(Codes codes) {
     setState(() {
       successScans++;
-      Map<String, dynamic> payload = decodeData(codes.codes[0].text.toString());
+      Map<String, dynamic> data = decodeData(codes.codes[0].text.toString());
+      final header = data["header"];
+      if (totalSegments == 0) {
+        totalSegments = header["chunks"];
+        spendbundle = List.generate(totalSegments, (index) => "");
+      }
+      String payload = data["payload"];
+      int chunkIndex = header["chunk"];
+      if (spendbundle[chunkIndex - 1] == "" && payload != "") {
+        spendbundle[chunkIndex] = payload;
+        collectedSegments++;
+      }
+
+      if (collectedSegments == totalSegments) {
+        codes.codes[0].text = spendbundle.join("");
+        result = codes.codes[0];
+      }
       multiResult = codes;
     });
   }
