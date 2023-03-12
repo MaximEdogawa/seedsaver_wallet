@@ -174,7 +174,7 @@ class VaultCard extends StatelessWidget {
         cardHolderName: 'Leo',
         cvvCode: '123',
         showBackView: false,
-        isSwipeGestureEnabled: true,
+        isSwipeGestureEnabled: false,
         height: kCardHeight,
         width: kCardWidth,
         cardBgColor: backgroundColor,

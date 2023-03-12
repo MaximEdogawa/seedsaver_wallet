@@ -6,6 +6,7 @@ import '../widgets/debug_info_widget.dart';
 import '../widgets/scan_result_widget.dart';
 import '../widgets/unsupported_platform_widget.dart';
 import '../widgets/writer_loop_widget.dart';
+import '../widgets/load_file_widget.dart';
 
 import 'dart:convert';
 import 'package:base32/base32.dart';
@@ -94,19 +95,7 @@ class _QRViewState extends State<QRView> {
             else
               ListView(
                 children: [
-                  WriterLoopWidget(
-                    messages: const Messages(
-                      createButton: 'Create Code',
-                    ),
-                    onSuccess: (result, bytes) {
-                      setState(() {
-                        createdCodeBytes = bytes;
-                      });
-                    },
-                    onError: (error) {
-                      _showMessage(context, 'Error: $error');
-                    },
-                  ),
+                  LoadFileWidget(),
                   if (createdCodeBytes != null)
                     Image.memory(createdCodeBytes ?? Uint8List(0), height: 400),
                 ],
