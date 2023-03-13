@@ -9,8 +9,11 @@ import '../widgets/writer_loop_widget.dart';
 import '../widgets/load_file_widget.dart';
 
 import 'dart:convert';
+import 'package:cryptography/cryptography.dart';
 import 'package:base32/base32.dart';
 
+const PBKDF2_ROUNDS = 2048;
+// Size of in bytes for each header section
 Map<String, int> headerSize = {'mode': 1, 'chunk': 7, 'chunks': 7};
 
 class QRView extends StatefulWidget {
@@ -34,6 +37,7 @@ class _QRViewState extends State<QRView> {
   List<String> spendbundle = [];
   int totalSegments = 0;
   int collectedSegments = 0;
+  List<int> hashedPayload = [];
 
   @override
   Widget build(BuildContext context) {
@@ -126,22 +130,38 @@ class _QRViewState extends State<QRView> {
   _onMultiScanSuccess(Codes codes) {
     setState(() {
       successScans++;
-      Map<String, dynamic> data = decodeData(codes.codes[0].text.toString());
+      List<int> payload = [];
+      Map<String, dynamic> data =
+          decodeData(codes.codes[0].text.toString(), payload);
       final header = data["header"];
-      if (totalSegments == 0) {
-        totalSegments = header["chunks"];
-        spendbundle = List.generate(totalSegments, (index) => "");
-      }
-      String payload = data["payload"];
-      int chunkIndex = header["chunk"];
-      if (spendbundle[chunkIndex - 1] == "" && payload != "") {
-        spendbundle[chunkIndex] = payload;
-        collectedSegments++;
+      int chunkIndex = header["chunk"] - 1;
+      int mode = header["mode"];
+      if (mode == 0) {
+        if (totalSegments == 0) {
+          totalSegments = header["chunks"];
+          spendbundle = List.generate(totalSegments, (index) => "");
+        }
+        if (spendbundle[chunkIndex] == "" && payload.isNotEmpty == true) {
+          spendbundle[chunkIndex] = utf8.decode(payload);
+          collectedSegments++;
+        }
+      } else if (mode == 1) {
+        hashedPayload = payload;
       }
 
-      if (collectedSegments == totalSegments) {
-        codes.codes[0].text = spendbundle.join("");
+      if (collectedSegments == totalSegments &&
+          totalSegments != 0 &&
+          hashedPayload.isNotEmpty == true) {
+        String joinedSpendBundle = spendbundle.join("");
+        //List<int> hash = pbkdf2HmacSHA512(joinedSpendBundle, PBKDF2_ROUNDS);
+
+        codes.codes[0].text = joinedSpendBundle;
         result = codes.codes[0];
+        //TODO: Refactor for state control to reset all scan parameters&states
+        spendbundle = [];
+        totalSegments = 0;
+        collectedSegments = 0;
+        hashedPayload = [];
       }
       multiResult = codes;
     });
@@ -177,9 +197,8 @@ class _QRViewState extends State<QRView> {
     });
   }
 
-  Map<String, dynamic> decodeData(String data) {
+  Map<String, dynamic> decodeData(String data, List<int> payload) {
     final header = <String, int>{};
-    final payload = <int>[];
     try {
       final content = base32.decode(data.replaceAll('%', '='));
       var cursor = 0;
@@ -188,14 +207,29 @@ class _QRViewState extends State<QRView> {
         header[key] = bytesToInt(content.sublist(cursor, cursor + size));
         cursor += size;
       }
+
       payload.addAll(content.sublist(cursor));
     } on FormatException {
       throw ArgumentError('QR code is not in a valid format');
     }
-    return {'header': header, 'payload': utf8.decode(payload)};
+    return {'header': header};
   }
 
   int bytesToInt(List<int> bytes) {
     return bytes.fold(0, (result, byte) => (result << 8) + byte);
+  }
+
+  //Review code and find a hashing alogithm that works both on python and flutter
+  List<int> pbkdf2HmacSHA512(String message, int rounds) {
+    final pbkdf2 = Pbkdf2(
+      macAlgorithm: Hmac.sha512(),
+      iterations: rounds,
+      bits: 64,
+    );
+    var hash = pbkdf2.deriveKeyFromPassword(
+      password: message,
+      nonce: const [],
+    );
+    return utf8.encode(hash.toString());
   }
 }
