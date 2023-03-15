@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seedsaver_wallet/views/qrview.dart';
 import 'package:seedsaver_wallet/views/vaultview.dart';
+import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -79,7 +80,7 @@ class _HomePageState extends State<HomePage> {
         page = GeneratorPage();
         break;
       case 1:
-        page = FavoritesPage();
+        page = FileTransferWidget(textContent: '');
         break;
       case 2:
         page = QRView();

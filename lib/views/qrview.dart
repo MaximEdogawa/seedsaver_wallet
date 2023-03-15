@@ -153,11 +153,12 @@ class _QRViewState extends State<QRView> {
           totalSegments != 0 &&
           hashedPayload.isNotEmpty == true) {
         String joinedSpendBundle = spendbundle.join("");
+        //Removed hashing check develop at a later date
         //List<int> hash = pbkdf2HmacSHA512(joinedSpendBundle, PBKDF2_ROUNDS);
 
         codes.codes[0].text = joinedSpendBundle;
         result = codes.codes[0];
-        //TODO: Refactor for state control to reset all scan parameters&states
+        // Refactor for state control to reset all scan parameters&states
         spendbundle = [];
         totalSegments = 0;
         collectedSegments = 0;
