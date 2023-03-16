@@ -3,9 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image/image.dart' as imglib;
 import 'package:flutter_zxing/flutter_zxing.dart';
-import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 
 class LoadFileWidget extends StatefulWidget {
   const LoadFileWidget({
@@ -34,8 +32,6 @@ class LoadFileWidget extends StatefulWidget {
 
 class _LoadFileWidgetState extends State<LoadFileWidget> {
   final TextEditingController _textEditingController = TextEditingController();
-  int _codeFormat = Format.qrCode;
-  EccLevel _eccLevel = EccLevel.low;
 
   Future<void> _loadFile() async {
     final FilePickerResult? result =
