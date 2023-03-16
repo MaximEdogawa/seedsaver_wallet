@@ -9,8 +9,9 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
+import 'package:base32/base32.dart';
+import 'package:seedsaver_wallet/constants/qr_constants.dart';
 
 class FileTransferWidget extends StatefulWidget {
   final String textContent;
@@ -20,9 +21,9 @@ class FileTransferWidget extends StatefulWidget {
 
   FileTransferWidget({
     required this.textContent,
-    this.ecLvl = "M",
+    this.ecLvl = "L",
     this.mode = "full",
-    this.version = 20,
+    this.version = 15,
   });
 
   @override
@@ -45,52 +46,32 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
     final String text = widget.textContent;
     final textSize = text.length;
 
-    const chunkSize = 512;
-    final headerSize = {'mode': 1, 'chunk': 7, 'chunks': 7};
+    int chunkSize = 330;
+    final headerSize = {'m': 1, 'i': 7, 'n': 7};
     final chunkCount = (textSize - 1) ~/ chunkSize + 1;
 
     totalChunks = chunkCount;
 
-    final header = {'mode': 0, 'chunk': 0, 'chunks': totalChunks};
-    final headerHash = {'mode': 1, 'chunk': 1, 'chunks': 1};
+    final header = {'m': 0, 'i': 0, 'n': totalChunks};
+    final headerHash = {'m': 1, 'i': 1, 'n': 1};
 
-    if (totalChunks > 256 * headerSize['chunk']!) {
+    if (totalChunks > 256 * headerSize['i']!) {
       throw ArgumentError(
           'The chosen file is too big to be transferred using these QR code parameters.');
     }
     //final chunkHash = _generateHash(utf8.encode(text));
     int x = 1;
     for (int i = 0; i < textSize; i += chunkSize) {
-      header["chunk"] = x;
+      header["i"] = x;
       x++;
-      final headerData = _encodeHeader(header, headerSize);
-      final String helpString = text.substring(
+      final String payload = text.substring(
           i, i + chunkSize > text.length ? text.length : i + chunkSize);
-      chunks.add(helpString);
+      String data = encodeData(header, headerSize, payload);
+      List<int> content = [];
+      Map<String, dynamic> headerData = decodeData(data, headerSize, content);
+      chunks.add(data);
     }
-
-    // Display QR code immediately and wait for frame rate delay
-
     final stop = 1;
-  }
-
-  int _calculateChunkSize() {
-    final charSize = widget.ecLvl == 'H'
-        ? 8
-        : widget.ecLvl == 'Q'
-            ? 11
-            : widget.ecLvl == 'M'
-                ? 14
-                : 17;
-    final qrCodeSize = widget.version < 10
-        ? 21
-        : widget.version < 27
-            ? 25
-            : widget.version < 41
-                ? 29
-                : 33;
-    final bytesSize = qrCodeSize * qrCodeSize ~/ 8 - charSize;
-    return bytesSize;
   }
 
   int _getErrorCorrectionLevel() {
@@ -118,15 +99,15 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
           : Column(
               children: [
                 LinearProgressIndicator(
-                  value: currentChunkIndex / totalChunks,
+                  value: currentChunkIndex / (totalChunks - 1),
                 ),
                 const SizedBox(height: 16.0),
                 Expanded(
                   child: Center(
                     child: QrImage(
                       data: chunks[currentChunkIndex],
-                      version: widget.version,
                       errorCorrectionLevel: _getErrorCorrectionLevel(),
+                      version: widget.version,
                       size: 400.0,
                     ),
                   ),
@@ -136,7 +117,9 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            currentChunkIndex++;
+            if (currentChunkIndex < totalChunks - 1) {
+              currentChunkIndex++;
+            }
           });
         },
         child: const Icon(Icons.arrow_forward),
@@ -144,5 +127,62 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
     );
   }
 
-  _encodeHeader(Map<String, int> header, Map<String, int> headerSize) {}
+  String encodeData(
+      Map<String, int> header, Map<String, int> headerSize, String content) {
+    // Decode the Base32-encoded content and replace '%' with '='
+    final contentBytes =
+        base32.decode(base32.encode(Uint8List.fromList(utf8.encode(content))));
+    var data = header.entries.map((entry) {
+      final k = entry.key;
+      final size = headerSize[k]!;
+      var value = entry.value.toRadixString(16).padLeft(size * 2, '0');
+      return value;
+    }).join('');
+    final dataBytes =
+        base32.decode(base32.encode(Uint8List.fromList(hexToIntList(data))));
+    var combinedData = base32.encode(dataBytes) + base32.encode(contentBytes);
+
+    return combinedData;
+  }
+
+  List<int> hexToIntList(String hexString) {
+    List<int> bytes = [];
+    for (int i = 0; i < hexString.length; i += 2) {
+      String hexByte = hexString.substring(i, i + 2);
+      int byte = int.parse(hexByte, radix: 16);
+      bytes.add(byte);
+    }
+    return bytes;
+  }
+
+  Map<String, dynamic> decodeData(
+      String data, Map<String, int> headerSize, List<int> payload) {
+    final header = <String, int>{};
+    try {
+      final content = base32.decode(data.replaceAll('%', '='));
+      var cursor = 0;
+      for (final key in headerSize.keys) {
+        final size = headerSize[key]!;
+        header[key] = bytesToInt(content.sublist(cursor, cursor + size));
+        cursor += size;
+      }
+
+      payload.addAll(content.sublist(cursor));
+    } on FormatException {
+      throw ArgumentError('QR code is not in a valid format');
+    }
+    return {'header': header};
+  }
+
+  int bytesToInt(List<int> bytes) {
+    return bytes.fold(0, (result, byte) => (result << 8) + byte);
+  }
+
+  int _calculateMaxDataSize(int version, String ecLvl) {
+    final totalDataCodewords =
+        NUM_BLOCKS_BY_VERSION[version]![1] * NUM_EC_BLOCKS[ecLvl]![1];
+    final maxDataBits = totalDataCodewords * 8;
+    final dataSize = maxDataBits - QR_CODE_CHARACTERS_SIZE[version]![1];
+    return dataSize;
+  }
 }

@@ -14,7 +14,7 @@ import 'package:base32/base32.dart';
 
 const PBKDF2_ROUNDS = 2048;
 // Size of in bytes for each header section
-Map<String, int> headerSize = {'mode': 1, 'chunk': 7, 'chunks': 7};
+Map<String, int> headerSize = {'m': 1, 'i': 7, 'n': 7};
 
 class QRView extends StatefulWidget {
   const QRView({Key? key}) : super(key: key);
@@ -134,11 +134,11 @@ class _QRViewState extends State<QRView> {
       Map<String, dynamic> data =
           decodeData(codes.codes[0].text.toString(), payload);
       final header = data["header"];
-      int chunkIndex = header["chunk"] - 1;
-      int mode = header["mode"];
+      int chunkIndex = header["i"] - 1;
+      int mode = header["m"];
       if (mode == 0) {
         if (totalSegments == 0) {
-          totalSegments = header["chunks"];
+          totalSegments = header["n"];
           spendbundle = List.generate(totalSegments, (index) => "");
         }
         if (spendbundle[chunkIndex] == "" && payload.isNotEmpty == true) {
