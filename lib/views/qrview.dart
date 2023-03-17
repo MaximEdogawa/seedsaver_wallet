@@ -5,8 +5,6 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import '../widgets/debug_info_widget.dart';
 import '../widgets/scan_result_widget.dart';
 import '../widgets/unsupported_platform_widget.dart';
-import '../widgets/writer_loop_widget.dart';
-import '../widgets/load_file_widget.dart';
 
 import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
@@ -29,15 +27,16 @@ class _QRViewState extends State<QRView> {
   Code? result;
   Codes? multiResult;
 
-  bool isMultiScan = false;
+  bool isMultiScan = true;
 
-  bool showDebugInfo = true;
+  bool showDebugInfo = false;
   int successScans = 0;
   int failedScans = 0;
   List<String> spendbundle = [];
-  int totalSegments = 0;
-  int collectedSegments = 0;
+  int totalChunks = 0;
   List<int> hashedPayload = [];
+
+  int collectedChunks = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +71,9 @@ class _QRViewState extends State<QRView> {
               resolution: ResolutionPreset.high,
               lensDirection: CameraLensDirection.back,
             ),
+          LinearProgressIndicator(
+            value: collectedChunks / (totalChunks - 1),
+          ),
           if (showDebugInfo)
             DebugInfoWidget(
               successScans: successScans,
@@ -114,19 +116,19 @@ class _QRViewState extends State<QRView> {
       int chunkIndex = header["chunk"] - 1;
       int mode = header["mode"];
       if (mode == 1) {
-        if (totalSegments == 0) {
-          totalSegments = header["chunks"];
-          spendbundle = List.generate(totalSegments, (index) => "");
+        if (totalChunks == 0) {
+          totalChunks = header["chunks"];
+          spendbundle = List.generate(totalChunks, (index) => "");
         }
         if (spendbundle[chunkIndex] == "" && payload.isNotEmpty == true) {
           spendbundle[chunkIndex] = utf8.decode(payload);
-          collectedSegments++;
+          collectedChunks++;
         }
       } else if (mode == 2) {
         hashedPayload = payload;
       }
 
-      if (collectedSegments == totalSegments && totalSegments != 0) {
+      if (collectedChunks == totalChunks && totalChunks != 0) {
         String joinedSpendBundle = spendbundle.join("");
         //Removed hashing check develop at a later date
         //List<int> hash = pbkdf2HmacSHA512(joinedSpendBundle, PBKDF2_ROUNDS);
@@ -135,8 +137,8 @@ class _QRViewState extends State<QRView> {
         result = codes.codes[0];
         // Refactor for state control to reset all scan parameters&states
         spendbundle = [];
-        totalSegments = 0;
-        collectedSegments = 0;
+        totalChunks = 0;
+        collectedChunks = 0;
         hashedPayload = [];
       }
       multiResult = codes;
@@ -146,7 +148,6 @@ class _QRViewState extends State<QRView> {
   _onMultiScanFailure(Codes result) {
     setState(() {
       failedScans++;
-      multiResult = result;
     });
     if (result.codes.isNotEmpty == true) {
       _showMessage(context, 'Error: ${result.codes.first.error}');
