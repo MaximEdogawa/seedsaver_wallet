@@ -43,58 +43,46 @@ class _QRViewState extends State<QRView> {
   Widget build(BuildContext context) {
     final isCameraSupported = defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android;
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const TabBar(
-            tabs: [
-              Tab(text: 'Scan Code'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            if (kIsWeb)
-              const UnsupportedPlatformWidget()
-            else if (!isCameraSupported)
-              const Center(
-                child: Text('Camera not supported on this platform'),
-              )
-            else if (result != null && result?.isValid == true)
-              ScanResultWidget(
-                result: result,
-                onScanAgain: () => setState(() => result = null),
-              )
-            else
-              Stack(
-                children: [
-                  ReaderWidget(
-                    onScan: _onScanSuccess,
-                    onScanFailure: _onScanFailure,
-                    onMultiScan: _onMultiScanSuccess,
-                    onMultiScanFailure: _onMultiScanFailure,
-                    onMultiScanModeChanged: _onMultiScanModeChanged,
-                    isMultiScan: isMultiScan,
-                    scanDelay: Duration(milliseconds: isMultiScan ? 50 : 500),
-                    resolution: ResolutionPreset.high,
-                    lensDirection: CameraLensDirection.back,
-                  ),
-                  if (showDebugInfo)
-                    DebugInfoWidget(
-                      successScans: successScans,
-                      failedScans: failedScans,
-                      error: isMultiScan ? multiResult?.error : result?.error,
-                      duration: isMultiScan
-                          ? multiResult?.duration ?? 0
-                          : result?.duration ?? 0,
-                      onReset: _onReset,
-                    ),
-                ],
-              )
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scan Code'),
+      ),
+      body: Stack(
+        children: [
+          if (kIsWeb)
+            const UnsupportedPlatformWidget()
+          else if (!isCameraSupported)
+            const Center(
+              child: Text('Camera not supported on this platform'),
+            )
+          else if (result != null && result?.isValid == true)
+            ScanResultWidget(
+              result: result,
+              onScanAgain: () => setState(() => result = null),
+            )
+          else
+            ReaderWidget(
+              onScan: _onScanSuccess,
+              onScanFailure: _onScanFailure,
+              onMultiScan: _onMultiScanSuccess,
+              onMultiScanFailure: _onMultiScanFailure,
+              onMultiScanModeChanged: _onMultiScanModeChanged,
+              isMultiScan: isMultiScan,
+              scanDelay: Duration(milliseconds: isMultiScan ? 50 : 500),
+              resolution: ResolutionPreset.high,
+              lensDirection: CameraLensDirection.back,
+            ),
+          if (showDebugInfo)
+            DebugInfoWidget(
+              successScans: successScans,
+              failedScans: failedScans,
+              error: isMultiScan ? multiResult?.error : result?.error,
+              duration: isMultiScan
+                  ? multiResult?.duration ?? 0
+                  : result?.duration ?? 0,
+              onReset: _onReset,
+            ),
+        ],
       ),
     );
   }
@@ -125,7 +113,7 @@ class _QRViewState extends State<QRView> {
       final header = data["header"];
       int chunkIndex = header["chunk"] - 1;
       int mode = header["mode"];
-      if (mode == 0) {
+      if (mode == 1) {
         if (totalSegments == 0) {
           totalSegments = header["chunks"];
           spendbundle = List.generate(totalSegments, (index) => "");
@@ -134,13 +122,11 @@ class _QRViewState extends State<QRView> {
           spendbundle[chunkIndex] = utf8.decode(payload);
           collectedSegments++;
         }
-      } else if (mode == 1) {
+      } else if (mode == 2) {
         hashedPayload = payload;
       }
 
-      if (collectedSegments == totalSegments &&
-          totalSegments != 0 &&
-          hashedPayload.isNotEmpty == true) {
+      if (collectedSegments == totalSegments && totalSegments != 0) {
         String joinedSpendBundle = spendbundle.join("");
         //Removed hashing check develop at a later date
         //List<int> hash = pbkdf2HmacSHA512(joinedSpendBundle, PBKDF2_ROUNDS);

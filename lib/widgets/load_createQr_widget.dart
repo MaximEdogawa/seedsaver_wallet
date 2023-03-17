@@ -8,9 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:crypto/crypto.dart';
 import 'package:base32/base32.dart';
-
 import 'package:file_picker/file_picker.dart';
-import 'package:image/image.dart' as imglib;
 
 class FileTransferWidget extends StatefulWidget {
   String textContent;
