@@ -5,8 +5,6 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import '../widgets/debug_info_widget.dart';
 import '../widgets/scan_result_widget.dart';
 import '../widgets/unsupported_platform_widget.dart';
-import '../widgets/writer_loop_widget.dart';
-import '../widgets/load_file_widget.dart';
 
 import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
@@ -14,7 +12,7 @@ import 'package:base32/base32.dart';
 
 const PBKDF2_ROUNDS = 2048;
 // Size of in bytes for each header section
-Map<String, int> headerSize = {'mode': 1, 'chunk': 7, 'chunks': 7};
+Map<String, int> headerSize = {'mode': 1, 'chunk': 2, 'chunks': 2};
 
 class QRView extends StatefulWidget {
   const QRView({Key? key}) : super(key: key);
@@ -29,83 +27,64 @@ class _QRViewState extends State<QRView> {
   Code? result;
   Codes? multiResult;
 
-  bool isMultiScan = false;
+  bool isMultiScan = true;
 
-  bool showDebugInfo = true;
+  bool showDebugInfo = false;
   int successScans = 0;
   int failedScans = 0;
   List<String> spendbundle = [];
-  int totalSegments = 0;
-  int collectedSegments = 0;
+  int totalChunks = 0;
   List<int> hashedPayload = [];
+
+  int collectedChunks = 1;
 
   @override
   Widget build(BuildContext context) {
     final isCameraSupported = defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android;
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const TabBar(
-            tabs: [
-              Tab(text: 'Scan Code'),
-              Tab(text: 'Create Code'),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scan Code'),
+      ),
+      body: Stack(
+        children: [
+          if (kIsWeb)
+            const UnsupportedPlatformWidget()
+          else if (!isCameraSupported)
+            const Center(
+              child: Text('Camera not supported on this platform'),
+            )
+          else if (result != null && result?.isValid == true)
+            ScanResultWidget(
+              result: result,
+              onScanAgain: () => setState(() => result = null),
+            )
+          else
+            ReaderWidget(
+              onScan: _onScanSuccess,
+              onScanFailure: _onScanFailure,
+              onMultiScan: _onMultiScanSuccess,
+              onMultiScanFailure: _onMultiScanFailure,
+              onMultiScanModeChanged: _onMultiScanModeChanged,
+              isMultiScan: isMultiScan,
+              scanDelay: Duration(milliseconds: isMultiScan ? 50 : 500),
+              resolution: ResolutionPreset.high,
+              lensDirection: CameraLensDirection.back,
+            ),
+          LinearProgressIndicator(
+            value: collectedChunks / (totalChunks - 1),
           ),
-        ),
-        body: TabBarView(
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            if (kIsWeb)
-              const UnsupportedPlatformWidget()
-            else if (!isCameraSupported)
-              const Center(
-                child: Text('Camera not supported on this platform'),
-              )
-            else if (result != null && result?.isValid == true)
-              ScanResultWidget(
-                result: result,
-                onScanAgain: () => setState(() => result = null),
-              )
-            else
-              Stack(
-                children: [
-                  ReaderWidget(
-                    onScan: _onScanSuccess,
-                    onScanFailure: _onScanFailure,
-                    onMultiScan: _onMultiScanSuccess,
-                    onMultiScanFailure: _onMultiScanFailure,
-                    onMultiScanModeChanged: _onMultiScanModeChanged,
-                    isMultiScan: isMultiScan,
-                    scanDelay: Duration(milliseconds: isMultiScan ? 50 : 500),
-                    resolution: ResolutionPreset.high,
-                    lensDirection: CameraLensDirection.back,
-                  ),
-                  if (showDebugInfo)
-                    DebugInfoWidget(
-                      successScans: successScans,
-                      failedScans: failedScans,
-                      error: isMultiScan ? multiResult?.error : result?.error,
-                      duration: isMultiScan
-                          ? multiResult?.duration ?? 0
-                          : result?.duration ?? 0,
-                      onReset: _onReset,
-                    ),
-                ],
-              ),
-            if (kIsWeb)
-              const UnsupportedPlatformWidget()
-            else
-              ListView(
-                children: [
-                  LoadFileWidget(),
-                  if (createdCodeBytes != null)
-                    Image.memory(createdCodeBytes ?? Uint8List(0), height: 400),
-                ],
-              ),
-          ],
-        ),
+          if (showDebugInfo)
+            DebugInfoWidget(
+              successScans: successScans,
+              failedScans: failedScans,
+              error: isMultiScan ? multiResult?.error : result?.error,
+              duration: isMultiScan
+                  ? multiResult?.duration ?? 0
+                  : result?.duration ?? 0,
+              onReset: _onReset,
+            ),
+        ],
       ),
     );
   }
@@ -136,31 +115,30 @@ class _QRViewState extends State<QRView> {
       final header = data["header"];
       int chunkIndex = header["chunk"] - 1;
       int mode = header["mode"];
-      if (mode == 0) {
-        if (totalSegments == 0) {
-          totalSegments = header["chunks"];
-          spendbundle = List.generate(totalSegments, (index) => "");
+      if (mode == 1) {
+        if (totalChunks == 0) {
+          totalChunks = header["chunks"];
+          spendbundle = List.generate(totalChunks, (index) => "");
         }
         if (spendbundle[chunkIndex] == "" && payload.isNotEmpty == true) {
           spendbundle[chunkIndex] = utf8.decode(payload);
-          collectedSegments++;
+          collectedChunks++;
         }
-      } else if (mode == 1) {
+      } else if (mode == 2) {
         hashedPayload = payload;
       }
 
-      if (collectedSegments == totalSegments &&
-          totalSegments != 0 &&
-          hashedPayload.isNotEmpty == true) {
+      if (collectedChunks == totalChunks && totalChunks != 0) {
         String joinedSpendBundle = spendbundle.join("");
+        //Removed hashing check develop at a later date
         //List<int> hash = pbkdf2HmacSHA512(joinedSpendBundle, PBKDF2_ROUNDS);
 
         codes.codes[0].text = joinedSpendBundle;
         result = codes.codes[0];
-        //TODO: Refactor for state control to reset all scan parameters&states
+        // Refactor for state control to reset all scan parameters&states
         spendbundle = [];
-        totalSegments = 0;
-        collectedSegments = 0;
+        totalChunks = 0;
+        collectedChunks = 0;
         hashedPayload = [];
       }
       multiResult = codes;
@@ -170,7 +148,6 @@ class _QRViewState extends State<QRView> {
   _onMultiScanFailure(Codes result) {
     setState(() {
       failedScans++;
-      multiResult = result;
     });
     if (result.codes.isNotEmpty == true) {
       _showMessage(context, 'Error: ${result.codes.first.error}');

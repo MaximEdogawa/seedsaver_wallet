@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:seedsaver_wallet/views/qrview.dart';
 import 'package:seedsaver_wallet/views/vaultview.dart';
+import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -79,7 +80,7 @@ class _HomePageState extends State<HomePage> {
         page = GeneratorPage();
         break;
       case 1:
-        page = FavoritesPage();
+        page = FileTransferWidget();
         break;
       case 2:
         page = QRView();
@@ -130,12 +131,12 @@ class _HomePageState extends State<HomePage> {
                         label: 'Home',
                       ),
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.favorite),
-                        label: 'Favorites',
+                        icon: Icon(Icons.qr_code),
+                        label: 'QR Show',
                       ),
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.qr_code),
-                        label: 'QR',
+                        icon: Icon(Icons.camera_alt_outlined),
+                        label: 'QR San',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.safety_check),
@@ -164,12 +165,12 @@ class _HomePageState extends State<HomePage> {
                         label: Text('Home'),
                       ),
                       NavigationRailDestination(
-                        icon: Icon(Icons.favorite),
-                        label: Text('Favorites'),
+                        icon: Icon(Icons.qr_code),
+                        label: Text('QR Show '),
                       ),
                       NavigationRailDestination(
-                        icon: Icon(Icons.qr_code),
-                        label: Text('QR'),
+                        icon: Icon(Icons.camera_alt_outlined),
+                        label: Text('QR Scan'),
                       ),
                       NavigationRailDestination(
                         icon: Icon(Icons.safety_check),
@@ -283,57 +284,6 @@ class BigCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class FavoritesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-    var appState = context.watch<MyAppState>();
-
-    if (appState.favorites.isEmpty) {
-      return const Center(
-        child: Text('No favorites yet.'),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(30),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
-        ),
-        Expanded(
-          // Make better use of wide windows with a grid.
-          child: GridView(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 400,
-              childAspectRatio: 400 / 80,
-            ),
-            children: [
-              for (var pair in appState.favorites)
-                ListTile(
-                  leading: IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        semanticLabel: 'Delete'),
-                    color: theme.colorScheme.primary,
-                    onPressed: () {
-                      appState.removeFavorite(pair);
-                    },
-                  ),
-                  title: Text(
-                    pair.asLowerCase,
-                    semanticsLabel: pair.asPascalCase,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

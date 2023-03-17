@@ -1,9 +1,31 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
 
 class LoadFileWidget extends StatefulWidget {
+  const LoadFileWidget({
+    super.key,
+    this.text,
+    this.format = Format.qrCode,
+    this.height = 120, // Width is calculated from height and format ratio
+    this.margin = 0,
+    this.eccLevel = EccLevel.low,
+    this.messages = const Messages(),
+    this.onSuccess,
+    this.onError,
+  });
+  final String? text;
+  final int format;
+  final int height;
+  final int margin;
+  final EccLevel eccLevel;
+  final Messages messages;
+  final Function(Encode result, Uint8List? bytes)? onSuccess;
+  final Function(String error)? onError;
+
   @override
   _LoadFileWidgetState createState() => _LoadFileWidgetState();
 }
