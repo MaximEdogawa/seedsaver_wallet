@@ -22,6 +22,7 @@ dependencies:
   cryptography: ^2.5.0
   qr_flutter: ^4.0.0
   hex: ^0.2.0
+  flutter_launcher_icons: ^0.12.0
 
 dev_dependencies:
   flutter_lints: ^2.0.1
@@ -30,3 +31,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo_only.png"
+
+
+  

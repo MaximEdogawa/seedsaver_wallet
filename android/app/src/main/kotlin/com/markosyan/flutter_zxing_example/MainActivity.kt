@@ -1,4 +1,4 @@
-package com.markosyan.flutter_zxing_example
+package seedsaver.wallet
 
 import io.flutter.embedding.android.FlutterActivity
 

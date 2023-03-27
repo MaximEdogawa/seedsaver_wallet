@@ -127,10 +127,19 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
       ),
       body: chunks.isEmpty
           ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: _loadFile,
-                  child: const Text('Load file'),
+                Center(
+                  child: FloatingActionButton.extended(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.black,
+                    onPressed: () {
+                      _loadFile();
+                    },
+                    icon: Icon(Icons.add),
+                    label: Text('Load File'),
+                  ),
                 )
               ],
             )
