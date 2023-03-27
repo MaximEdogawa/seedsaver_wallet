@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
 import 'package:provider/provider.dart';
 
 import 'package:seedsaver_wallet/views/qrview.dart';
-import 'package:seedsaver_wallet/views/vaultview.dart';
 import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
+import 'package:seedsaver_wallet/widgets/not_yet_implemented_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,35 +30,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
-  var history = <WordPair>[];
-
   GlobalKey? historyListKey;
-
-  void getNext() {
-    history.insert(0, current);
-    var animatedList = historyListKey?.currentState as AnimatedListState?;
-    animatedList?.insertItem(0);
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favorites = <WordPair>[];
-
-  void toggleFavorite([WordPair? pair]) {
-    pair = pair ?? current;
-    if (favorites.contains(pair)) {
-      favorites.remove(pair);
-    } else {
-      favorites.add(pair);
-    }
-    notifyListeners();
-  }
-
-  void removeFavorite(WordPair pair) {
-    favorites.remove(pair);
-    notifyListeners();
-  }
 }
 
 class HomePage extends StatefulWidget {
@@ -77,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = NotYetImplementedCard();
         break;
       case 1:
         page = FileTransferWidget();
@@ -86,22 +57,7 @@ class _HomePageState extends State<HomePage> {
         page = QRView();
         break;
       case 3:
-        page = VaultPage(
-          cardsData: [
-            VaultCardData(
-              backgroundColor: Colors.grey.shade900,
-            ),
-            VaultCardData(
-              backgroundColor: Colors.cyan,
-            ),
-            VaultCardData(
-              backgroundColor: Colors.blue,
-            ),
-            VaultCardData(
-              backgroundColor: Colors.purple,
-            ),
-          ],
-        );
+        page = NotYetImplementedCard();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -127,8 +83,8 @@ class _HomePageState extends State<HomePage> {
                     type: BottomNavigationBarType.fixed,
                     items: const [
                       BottomNavigationBarItem(
-                        icon: Icon(Icons.home),
-                        label: 'Home',
+                        icon: Icon(Icons.wallet),
+                        label: 'Wallet',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(Icons.qr_code),
@@ -161,8 +117,8 @@ class _HomePageState extends State<HomePage> {
                     extended: constraints.maxWidth >= 600,
                     destinations: const [
                       NavigationRailDestination(
-                        icon: Icon(Icons.home),
-                        label: Text('Home'),
+                        icon: Icon(Icons.wallet),
+                        label: Text('Wallet'),
                       ),
                       NavigationRailDestination(
                         icon: Icon(Icons.qr_code),
@@ -189,161 +145,6 @@ class _HomePageState extends State<HomePage> {
               ],
             );
           }
-        },
-      ),
-    );
-  }
-}
-
-class GeneratorPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Expanded(
-            flex: 3,
-            child: HistoryListView(),
-          ),
-          const SizedBox(height: 10),
-          BigCard(pair: pair),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: const Text('Like'),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: const Text('Next'),
-              ),
-            ],
-          ),
-          const Spacer(flex: 2),
-        ],
-      ),
-    );
-  }
-}
-
-class BigCard extends StatelessWidget {
-  const BigCard({
-    Key? key,
-    required this.pair,
-  }) : super(key: key);
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-    var style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return Card(
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          // Make sure that the compound word wraps correctly when the window
-          // is too narrow.
-          child: MergeSemantics(
-            child: Wrap(
-              children: [
-                Text(
-                  pair.first,
-                  style: style.copyWith(fontWeight: FontWeight.w200),
-                ),
-                Text(
-                  pair.second,
-                  style: style.copyWith(fontWeight: FontWeight.bold),
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class HistoryListView extends StatefulWidget {
-  const HistoryListView({Key? key}) : super(key: key);
-
-  @override
-  State<HistoryListView> createState() => _HistoryListViewState();
-}
-
-class _HistoryListViewState extends State<HistoryListView> {
-  /// Needed so that [MyAppState] can tell [AnimatedList] below to animate
-  /// new items.
-  final _key = GlobalKey();
-
-  /// Used to "fade out" the history items at the top, to suggest continuation.
-  static const Gradient _maskingGradient = LinearGradient(
-    // This gradient goes from fully transparent to fully opaque black...
-    colors: [Colors.transparent, Colors.black],
-    // ... from the top (transparent) to half (0.5) of the way to the bottom.
-    stops: [0.0, 0.5],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final appState = context.watch<MyAppState>();
-    appState.historyListKey = _key;
-
-    return ShaderMask(
-      shaderCallback: (bounds) => _maskingGradient.createShader(bounds),
-      // This blend mode takes the opacity of the shader (i.e. our gradient)
-      // and applies it to the destination (i.e. our animated list).
-      blendMode: BlendMode.dstIn,
-      child: AnimatedList(
-        key: _key,
-        reverse: true,
-        padding: const EdgeInsets.only(top: 100),
-        initialItemCount: appState.history.length,
-        itemBuilder: (context, index, animation) {
-          final pair = appState.history[index];
-          return SizeTransition(
-            sizeFactor: animation,
-            child: Center(
-              child: TextButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite(pair);
-                },
-                icon: appState.favorites.contains(pair)
-                    ? Icon(Icons.favorite, size: 12)
-                    : const SizedBox(),
-                label: Text(
-                  pair.asLowerCase,
-                  semanticsLabel: pair.asPascalCase,
-                ),
-              ),
-            ),
-          );
         },
       ),
     );
