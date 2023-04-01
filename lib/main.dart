@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:seedsaver_wallet/views/qrview.dart';
 import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 import 'package:seedsaver_wallet/widgets/not_yet_implemented_widget.dart';
+import 'package:seedsaver_wallet/views/walletview.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,23 +15,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Seedsaver_wallet',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        ),
-        home: HomePage(),
+    return MaterialApp(
+      title: 'Seedsaver_wallet',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
+      home: HomePage(),
     );
   }
-}
-
-class MyAppState extends ChangeNotifier {
-  GlobalKey? historyListKey;
 }
 
 class HomePage extends StatefulWidget {
@@ -48,7 +42,7 @@ class _HomePageState extends State<HomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = NotYetImplementedCard();
+        page = MyCryptoWallet();
         break;
       case 1:
         page = FileTransferWidget();
