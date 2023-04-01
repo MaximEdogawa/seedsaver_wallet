@@ -36,7 +36,9 @@ class _QRViewState extends State<QRView> {
   int totalChunks = 0;
   List<int> hashedPayload = [];
 
-  int collectedChunks = 1;
+  int collectedChunks = 0;
+  int progressTotalChunks = 1;
+  int progressCollectedChunks = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +74,7 @@ class _QRViewState extends State<QRView> {
               lensDirection: CameraLensDirection.back,
             ),
           LinearProgressIndicator(
-            value: collectedChunks / (totalChunks - 1),
+            value: progressCollectedChunks / progressTotalChunks,
           ),
           if (showDebugInfo)
             DebugInfoWidget(
@@ -118,11 +120,13 @@ class _QRViewState extends State<QRView> {
       if (mode == 1) {
         if (totalChunks == 0) {
           totalChunks = header["chunks"];
+          progressTotalChunks = totalChunks;
           spendbundle = List.generate(totalChunks, (index) => "");
         }
         if (spendbundle[chunkIndex] == "" && payload.isNotEmpty == true) {
           spendbundle[chunkIndex] = utf8.decode(payload);
           collectedChunks++;
+          progressCollectedChunks = collectedChunks;
         }
       } else if (mode == 2) {
         hashedPayload = payload;
@@ -139,6 +143,8 @@ class _QRViewState extends State<QRView> {
         spendbundle = [];
         totalChunks = 0;
         collectedChunks = 0;
+        progressTotalChunks = 1;
+        progressCollectedChunks = 1;
         hashedPayload = [];
       }
       multiResult = codes;
