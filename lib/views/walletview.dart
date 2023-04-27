@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:seedsaver_wallet/models/wallet_page_view_model.dart';
-import 'package:seedsaver_wallet/widgets/eth_balance_section.dart';
+import 'package:seedsaver_wallet/widgets/xch_balance_section.dart';
 import 'package:seedsaver_wallet/widgets/public_address_section.dart';
 import 'package:seedsaver_wallet/widgets/token_details_section.dart';
 import 'package:seedsaver_wallet/widgets/token_transfer_section.dart';
