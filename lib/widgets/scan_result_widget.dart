@@ -126,7 +126,11 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
   }
 
   void _writeToFile(String text) async {
-    final file = File(await _filePathFuture);
+    final filePath = await _initFilePath();
+    final file = File(filePath);
+    if (await file.exists()) {
+      await file.delete();
+    }
     await file.writeAsString(text);
   }
 }
