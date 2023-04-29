@@ -29,6 +29,7 @@ dependencies:
   web3dart: ^2.4.1
   url_launcher: ^6.1.10
   flutter_zxing: ^1.1.2
+  convert: ^3.0.2
 
 
 dev_dependencies:

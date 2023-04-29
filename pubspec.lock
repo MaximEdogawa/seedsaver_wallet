@@ -194,7 +194,7 @@ packages:
     source: hosted
     version: "0.6.0+1"
   convert:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: convert
       sha256: "196284f26f69444b7f5c50692b55ec25da86d9e500451dc09333bf2e3ad69259"

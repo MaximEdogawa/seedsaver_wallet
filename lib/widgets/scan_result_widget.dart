@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
@@ -126,7 +128,12 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
   }
 
   void _writeToFile(String text) async {
-    final file = File(await _filePathFuture);
-    await file.writeAsString(text);
+    final filePath = await _initFilePath();
+    final file = File(filePath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    final hexString = hex.encode(utf8.encode(text));
+    await file.writeAsString(hexString);
   }
 }
