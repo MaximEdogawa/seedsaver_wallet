@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:seedsaver_wallet/views/qrview.dart';
 import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 import 'package:seedsaver_wallet/widgets/not_yet_implemented_widget.dart';
+import 'package:seedsaver_wallet/widgets/vault_init_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -57,7 +58,7 @@ class _HomePageState extends State<HomePage> {
         page = QRView();
         break;
       case 3:
-        page = NotYetImplementedCard();
+        page = VaultInitWidget();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
