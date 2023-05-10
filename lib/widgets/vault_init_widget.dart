@@ -29,38 +29,71 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
   double _rekey_clawback_value = 600.0;
   double _rekey_penalty_value = 900.0;
 
+  double saved_withdrawal_timelock_value = 600;
+  double saved_payment_clawback_value = 1200.0;
+  double saved_rekey_timelock_value = 300.0;
+  double saved_rekey_clawback_value = 600.0;
+  double saved_rekey_penalty_value = 900.0;
+
   double min_withdrawal_timelock_value = 600.0;
   double min_payment_clawback_value = 1200.0;
   double min_rekey_timelock_value = 300.0;
   double min_rekey_clawback_value = 600.0;
   double min_rekey_penalty_value = 900.0;
 
-  double max_withdrawal_timelock_value = 1000000.0;
-  double max_payment_clawback_value = 1000000.0;
-  double max_rekey_timelock_value = 1000000.0;
-  double max_rekey_clawback_value = 1000000.0;
-  double max_rekey_penalty_value = 1000000.0;
+  double max_value = 3600.0;
+  int divisions_value = 3600;
 
-  double divisions_value = 1000000;
   int _selectedIndex = 0;
+  String slider_label_unit = " s";
+  int slider_label_division = 1;
 
   void _handleRadioValueChanged(int index) {
     setState(() {
       _selectedIndex = index;
+
+      _withdrawal_timelock_value = 600.0;
+      _payment_clawback_value = 1200.0;
+      _rekey_timelock_value = 300.0;
+      _rekey_clawback_value = 600.0;
+      _rekey_penalty_value = 900.0;
+
       switch (_selectedIndex) {
         case 0:
-          min_withdrawal_timelock_value = 600.0;
-          _payment_clawback_value = 1200.0;
-          _rekey_timelock_value = 300.0;
-          _rekey_clawback_value = 600.0;
-          _rekey_penalty_value = 900.0;
-          max_withdrawal_timelock_value = 1000000.0;
-          max_payment_clawback_value = 1000000.0;
-          max_rekey_timelock_value = 1000000.0;
-          max_rekey_clawback_value = 1000000.0;
-          max_rekey_penalty_value = 1000000.0;
+          divisions_value = 3600;
+          slider_label_unit = " s";
+          slider_label_division = 1;
+          max_value = 3600;
+          break;
+        case 1:
+          divisions_value = 60;
+          slider_label_unit = " m";
+          slider_label_division = 60;
+          max_value = 3600;
+          break;
+        case 2:
+          divisions_value = 24;
+          slider_label_unit = " h";
+          slider_label_division = 360;
+          max_value = 8640;
+          break;
+        case 3:
+          divisions_value = 365;
+          slider_label_unit = " d";
+          slider_label_division = 8640;
+          max_value = 3153600;
+          break;
+        case 4:
+          divisions_value = 10;
+          slider_label_unit = " y";
+          slider_label_division = 3153600;
+          max_value = 31536000;
           break;
         default:
+          divisions_value = 3600;
+          slider_label_unit = " s";
+          slider_label_division = 1;
+          max_value = 3600;
           break;
       }
     });
@@ -107,7 +140,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${_withdrawal_timelock_value.toStringAsFixed(0)} sec",
+                                "${saved_withdrawal_timelock_value.toStringAsFixed(0)} sec",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -126,7 +159,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${_payment_clawback_value.toStringAsFixed(0)} sec",
+                                "${saved_payment_clawback_value.toStringAsFixed(0)} sec",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -145,7 +178,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${_rekey_timelock_value.toStringAsFixed(0)} sec",
+                                "${saved_rekey_timelock_value.toStringAsFixed(0)} sec",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -164,7 +197,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${_rekey_clawback_value.toStringAsFixed(0)} sec",
+                                "${saved_rekey_clawback_value.toStringAsFixed(0)} sec",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -183,7 +216,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${_rekey_penalty_value.toStringAsFixed(0)} sec",
+                                "${saved_rekey_penalty_value.toStringAsFixed(0)} sec",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -205,7 +238,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CustomRadioGroup(
-                  options: const ['sec', 'min', 'hour', 'day'],
+                  options: const ['sec', 'min', 'hour', 'day', 'year'],
                   selectedIndex: _selectedIndex,
                   onSelect: _handleRadioValueChanged,
                 ),
@@ -223,13 +256,15 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     context: context,
                     child: Slider(
                       min: min_withdrawal_timelock_value,
-                      max: max_withdrawal_timelock_value,
+                      max: max_value,
                       value: _withdrawal_timelock_value,
                       divisions: divisions_value,
-                      label: '${_withdrawal_timelock_value.round()}',
+                      label:
+                          '${(_withdrawal_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
                           _withdrawal_timelock_value = value;
+                          saved_withdrawal_timelock_value = value;
                         });
                       },
                     ),
@@ -249,13 +284,15 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     context: context,
                     child: Slider(
                       min: min_payment_clawback_value,
-                      max: max_payment_clawback_value,
+                      max: max_value,
                       value: _payment_clawback_value,
                       divisions: divisions_value,
-                      label: '${_payment_clawback_value.round()}',
+                      label:
+                          '${(_payment_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
                           _payment_clawback_value = value;
+                          saved_payment_clawback_value = value;
                         });
                       },
                     ),
@@ -275,13 +312,15 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     context: context,
                     child: Slider(
                       min: min_rekey_timelock_value,
-                      max: max_rekey_timelock_value,
+                      max: max_value,
                       value: _rekey_timelock_value,
                       divisions: divisions_value,
-                      label: '${_rekey_timelock_value.round()}',
+                      label:
+                          '${(_rekey_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
                           _rekey_timelock_value = value;
+                          saved_rekey_timelock_value = value;
                         });
                       },
                     ),
@@ -301,13 +340,15 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     context: context,
                     child: Slider(
                       min: min_rekey_clawback_value,
-                      max: max_rekey_clawback_value,
+                      max: max_value,
                       value: _rekey_clawback_value,
                       divisions: divisions_value,
-                      label: '${_rekey_clawback_value.round()}',
+                      label:
+                          '${(_rekey_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
                           _rekey_clawback_value = value;
+                          saved_rekey_clawback_value = value;
                         });
                       },
                     ),
@@ -327,13 +368,15 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     context: context,
                     child: Slider(
                       min: min_rekey_penalty_value,
-                      max: max_rekey_penalty_value,
+                      max: max_value,
                       value: _rekey_penalty_value,
                       divisions: divisions_value,
-                      label: '${_rekey_penalty_value.round()}',
+                      label:
+                          '${(_rekey_penalty_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
                           _rekey_penalty_value = value;
+                          saved_rekey_penalty_value = value;
                         });
                       },
                     ),
