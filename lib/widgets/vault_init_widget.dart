@@ -74,20 +74,20 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
         case 2:
           divisions_value = 24;
           slider_label_unit = " h";
-          slider_label_division = 360;
-          max_value = 8640;
+          slider_label_division = 3600;
+          max_value = 86400;
           break;
         case 3:
           divisions_value = 365;
           slider_label_unit = " d";
-          slider_label_division = 8640;
-          max_value = 3153600;
+          slider_label_division = 86400;
+          max_value = 31536000;
           break;
         case 4:
           divisions_value = 10;
           slider_label_unit = " y";
-          slider_label_division = 3153600;
-          max_value = 31536000;
+          slider_label_division = 31536000;
+          max_value = 315360000;
           break;
         default:
           divisions_value = 3600;
@@ -140,7 +140,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${saved_withdrawal_timelock_value.toStringAsFixed(0)} sec",
+                                formatDuration(saved_withdrawal_timelock_value),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -159,7 +159,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${saved_payment_clawback_value.toStringAsFixed(0)} sec",
+                                formatDuration(saved_payment_clawback_value),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -178,7 +178,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${saved_rekey_timelock_value.toStringAsFixed(0)} sec",
+                                formatDuration(saved_rekey_timelock_value),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -197,7 +197,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${saved_rekey_clawback_value.toStringAsFixed(0)} sec",
+                                formatDuration(saved_rekey_clawback_value),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -216,7 +216,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                                 ), //Textstyle
                               ),
                               Text(
-                                "${saved_rekey_penalty_value.toStringAsFixed(0)} sec",
+                                formatDuration(saved_rekey_penalty_value),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
@@ -425,6 +425,41 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
         ),
       ),
     );
+  }
+
+  String formatDuration(double seconds) {
+    int years = (seconds / (365 * 24 * 60 * 60)).floor();
+    seconds -= years * 365 * 24 * 60 * 60;
+
+    int days = (seconds / (24 * 60 * 60)).floor();
+    seconds -= days * 24 * 60 * 60;
+
+    int hours = (seconds / (60 * 60)).floor();
+    seconds -= hours * 60 * 60;
+
+    int minutes = (seconds / 60).floor();
+    seconds -= minutes * 60;
+
+    int remainingSeconds = seconds.floor();
+
+    String formattedDuration = '';
+    if (years > 0) {
+      formattedDuration += '$years y ';
+    }
+    if (days > 0) {
+      formattedDuration += '$days d ';
+    }
+    if (hours > 0) {
+      formattedDuration += '$hours h ';
+    }
+    if (minutes > 0) {
+      formattedDuration += '$minutes min ';
+    }
+    if (remainingSeconds > 0) {
+      formattedDuration += '$remainingSeconds s';
+    }
+
+    return formattedDuration;
   }
 }
 
