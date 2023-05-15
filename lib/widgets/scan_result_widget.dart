@@ -1,18 +1,22 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:share/share.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:seedsaver_wallet/store/data_store.dart';
 
 class ScanResultWidget extends StatefulWidget {
   const ScanResultWidget({
     Key? key,
-    this.result,
-    this.onScanAgain,
+    required this.result,
+    required this.onScanAgain,
+    required this.objectbox,
   }) : super(key: key);
 
   final Code? result;
   final Function()? onScanAgain;
+  final ObjectBox? objectbox;
 
   @override
   _ScanResultWidgetState createState() => _ScanResultWidgetState();
@@ -21,6 +25,7 @@ class ScanResultWidget extends StatefulWidget {
 class _ScanResultWidgetState extends State<ScanResultWidget> {
   late Future<String> _filePathFuture;
   late String _fileContent;
+  late String _pubKeys;
 
   @override
   void initState() {
@@ -28,6 +33,16 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
     _filePathFuture = _initFilePath();
     _writeToFile(widget.result?.text ?? '');
     _fileContent = '';
+    final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
+    final vaultBox = widget.objectbox?.store.box<Vault>();
+
+    Pubkey? pubKey = Pubkey();
+    pubKey.key = widget.result?.text ?? '';
+    pubKeyBox?.put(pubKey);
+
+    final vault = Vault();
+    vault.singeltonHex = widget.result?.text ?? '';
+    vaultBox?.put(vault);
   }
 
   @override
