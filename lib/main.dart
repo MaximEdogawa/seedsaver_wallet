@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
         page = QRView(objectbox: objectbox);
         break;
       case 3:
-        page = VaultInitWidget();
+        page = NotYetImplementedCard();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');

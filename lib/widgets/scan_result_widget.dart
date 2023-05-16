@@ -5,7 +5,6 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logger/logger.dart';
 
-import 'package:seedsaver_wallet/widgets/dynamic_checkbos_list.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/models/data_model.dart';
 
@@ -80,7 +79,7 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
                 'File saved at:',
                 style: Theme.of(context).textTheme.headline6,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
               FutureBuilder<String>(
                 future: _filePathFuture,
                 builder: (context, snapshot) {

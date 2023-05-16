@@ -1,25 +1,46 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+import 'package:seedsaver_wallet/store/data_store.dart';
+import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:seedsaver_wallet/widgets/custom_slider_widget.dart';
 import 'package:seedsaver_wallet/widgets/custom_radio_group_widget.dart';
 
 bool _isSelected = false;
 
 class VaultInitWidget extends StatefulWidget {
-  String textContent;
-
   VaultInitWidget({
-    this.textContent = "",
-  });
+    Key? key,
+    required this.checkedList,
+    required this.objectbox,
+  }) : super(key: key);
+
+  final List<bool> checkedList;
+  final ObjectBox? objectbox;
 
   @override
   _VaultInitWidgetState createState() => _VaultInitWidgetState();
 }
 
 class _VaultInitWidgetState extends State<VaultInitWidget> {
+  var loggerNoStack = Logger(
+    printer: PrettyPrinter(methodCount: 0),
+  );
+  late List<Pubkey>? pubKeyList;
+  late List<String>? pubKeyListString = [];
+
   @override
   void initState() {
     super.initState();
+    final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
+    pubKeyList = pubKeyBox?.getAll();
+    int? length = pubKeyList?.length.toInt();
+    for (int i = 0; i < length!; i++) {
+      if (widget.checkedList[i] == true) {
+        pubKeyListString?.add(pubKeyList?.elementAt(i).key.toString() ?? '');
+        loggerNoStack.i(pubKeyListString);
+      }
+    }
   }
 
   bool isLoading = false;
@@ -102,12 +123,10 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Vault Create'),
-      ),
       body: Center(
         child: Column(
           children: [
+            const SizedBox(height: 40),
             Card(
               elevation: 50,
               shadowColor: Colors.black,
