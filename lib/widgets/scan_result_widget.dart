@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:share/share.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:logger/logger.dart';
+
+import 'package:seedsaver_wallet/widgets/dynamic_checkbos_list.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
+import 'package:seedsaver_wallet/models/data_model.dart';
 
 class ScanResultWidget extends StatefulWidget {
   const ScanResultWidget({
@@ -25,7 +28,13 @@ class ScanResultWidget extends StatefulWidget {
 class _ScanResultWidgetState extends State<ScanResultWidget> {
   late Future<String> _filePathFuture;
   late String _fileContent;
-  late String _pubKeys;
+  late List<Pubkey>? pubKeyList;
+
+  var loggerNoStack = Logger(
+    printer: PrettyPrinter(methodCount: 0),
+  );
+
+  List<bool> checkedList = [];
 
   @override
   void initState() {
@@ -33,6 +42,7 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
     _filePathFuture = _initFilePath();
     _writeToFile(widget.result?.text ?? '');
     _fileContent = '';
+
     final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
     final vaultBox = widget.objectbox?.store.box<Vault>();
 
@@ -40,9 +50,13 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
     pubKey.key = widget.result?.text ?? '';
     pubKeyBox?.put(pubKey);
 
-    final vault = Vault();
-    vault.singeltonHex = widget.result?.text ?? '';
-    vaultBox?.put(vault);
+    pubKeyList = pubKeyBox?.getAll();
+    int? length = pubKeyList?.length.toInt();
+    checkedList = List<bool>.filled(length!, false);
+
+    for (int i = 0; i < length!; i++) {
+      loggerNoStack.i(pubKeyList?.elementAt(i).key.toString());
+    }
   }
 
   @override
@@ -95,12 +109,29 @@ class _ScanResultWidgetState extends State<ScanResultWidget> {
                   }
                 },
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: widget.onScanAgain,
                 child: const Text('Scan Again'),
               ),
               const SizedBox(height: 20),
+              SizedBox(
+                height: 200, // Set a fixed height for the container
+                child: ListView.builder(
+                  itemCount: pubKeyList?.length,
+                  itemBuilder: (context, index) {
+                    return CheckboxListTile(
+                      title: Text(pubKeyList?.elementAt(index).key ?? ''),
+                      value: checkedList[index],
+                      onChanged: (value) {
+                        setState(() {
+                          checkedList[index] = value!;
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
               if (_fileContent.isNotEmpty) ...[
                 Container(
                   height: 200,
