@@ -5,6 +5,7 @@ import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:seedsaver_wallet/widgets/vault_init_widget.dart';
+import 'package:seedsaver_wallet/widgets/custom_slider_widget.dart';
 
 class PubkeyResultWidget extends StatefulWidget {
   const PubkeyResultWidget({
@@ -30,7 +31,10 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
   late List<Pubkey>? pubKeyList;
   List<bool> checkedList = [];
   bool isContinue = false;
-
+  double currentLockLevel_value = 1.0;
+  int saved_curretnLockLevel = 1;
+  int saved_maximumLockLevel = 1;
+  int max_length = 1;
   @override
   void initState() {
     super.initState();
@@ -43,9 +47,7 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
       pubKeyBox?.put(pubKey);
     }
 
-    pubKeyList = pubKeyBox?.getAll();
-    int? length = pubKeyList?.length.toInt();
-    checkedList = List<bool>.filled(length!, false);
+    int? length = setPubKeyList(pubKeyBox);
 
     for (int i = 0; i < length!; i++) {
       loggerNoStack.i(pubKeyList?.elementAt(i).key.toString());
@@ -70,9 +72,15 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                         onPressed: widget.onScanAgain,
                         child: const Text('Scan Another'),
                       ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _onDeletePubkeyList();
+                        },
+                        child: const Text('Delete PubKey List'),
+                      ),
                       const SizedBox(height: 20),
                       SizedBox(
-                        height: 400, // Set a fixed height for the container
+                        height: 300, // Set a fixed height for the container
                         child: ListView.builder(
                           itemCount: pubKeyList?.length,
                           itemBuilder: (context, index) {
@@ -83,11 +91,50 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                               onChanged: (value) {
                                 setState(() {
                                   checkedList[index] = value!;
+                                  max_length = 1;
+                                  for (int i = 0; i < checkedList.length; i++) {
+                                    if (checkedList[i] == true) {
+                                      max_length++;
+                                    }
+                                  }
+                                  if (max_length > 1) {
+                                    max_length--;
+                                  } else {
+                                    max_length = 1;
+                                  }
+                                  saved_maximumLockLevel = max_length;
                                 });
                               },
                             );
                           },
                         ),
+                      ),
+                      Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Icon(Icons.lock),
+                          ),
+                          Expanded(
+                            child: CustomSlider(
+                              context: context,
+                              child: Slider(
+                                min: 1.0,
+                                max: (1.0 * max_length),
+                                value: currentLockLevel_value,
+                                divisions: max_length,
+                                label: saved_curretnLockLevel.toString(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    currentLockLevel_value = value;
+                                    saved_curretnLockLevel =
+                                        currentLockLevel_value.toInt();
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
@@ -108,7 +155,9 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
             )
           else
             VaultInitWidget(
-                checkedList: checkedList, objectbox: widget.objectbox)
+                pubKeyListString: getPubKeyList(),
+                currentLockLevel: saved_curretnLockLevel,
+                maximumLockLevel: saved_curretnLockLevel)
         ],
       ),
     );
@@ -118,5 +167,37 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
     setState(() {
       isContinue = true;
     });
+  }
+
+  _onDeletePubkeyList() {
+    setState(() {
+      final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
+      pubKeyBox?.removeAll();
+      setPubKeyList(pubKeyBox);
+      max_length = 1;
+    });
+  }
+
+  setPubKeyList(pubKeyBox) {
+    pubKeyList = pubKeyBox?.getAll();
+    int? length = pubKeyList?.length.toInt();
+    checkedList = List<bool>.filled(length!, false);
+    return length;
+  }
+
+  getPubKeyList() {
+    final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
+    late List<String>? pubKeyListString = [];
+
+    pubKeyList = pubKeyBox?.getAll();
+    int? length = pubKeyList?.length.toInt();
+    for (int i = 0; i < length!; i++) {
+      if (checkedList[i] == true) {
+        pubKeyListString.add(
+            pubKeyList?.elementAt(i).key.toString().replaceAll('\n', '') ?? '');
+        loggerNoStack.i(pubKeyListString);
+      }
+    }
+    return pubKeyListString;
   }
 }

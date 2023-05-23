@@ -5,18 +5,21 @@ import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:seedsaver_wallet/widgets/custom_slider_widget.dart';
 import 'package:seedsaver_wallet/widgets/custom_radio_group_widget.dart';
+import 'package:seedsaver_wallet/services/api_service.dart';
 
 bool _isSelected = false;
 
 class VaultInitWidget extends StatefulWidget {
   VaultInitWidget({
     Key? key,
-    required this.checkedList,
-    required this.objectbox,
+    required this.pubKeyListString,
+    required this.currentLockLevel,
+    required this.maximumLockLevel,
   }) : super(key: key);
 
-  final List<bool> checkedList;
-  final ObjectBox? objectbox;
+  late List<String>? pubKeyListString;
+  final int currentLockLevel;
+  final int maximumLockLevel;
 
   @override
   _VaultInitWidgetState createState() => _VaultInitWidgetState();
@@ -32,23 +35,14 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
   @override
   void initState() {
     super.initState();
-    final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
-    pubKeyList = pubKeyBox?.getAll();
-    int? length = pubKeyList?.length.toInt();
-    for (int i = 0; i < length!; i++) {
-      if (widget.checkedList[i] == true) {
-        pubKeyListString?.add(pubKeyList?.elementAt(i).key.toString() ?? '');
-        loggerNoStack.i(pubKeyListString);
-      }
-    }
   }
 
   bool isLoading = false;
-  double _withdrawal_timelock_value = 600;
-  double _payment_clawback_value = 1200.0;
-  double _rekey_timelock_value = 300.0;
-  double _rekey_clawback_value = 600.0;
-  double _rekey_penalty_value = 900.0;
+  double withdrawal_timelock_value = 600;
+  double payment_clawback_value = 1200.0;
+  double rekey_timelock_value = 300.0;
+  double rekey_clawback_value = 600.0;
+  double rekey_penalty_value = 900.0;
 
   double saved_withdrawal_timelock_value = 600;
   double saved_payment_clawback_value = 1200.0;
@@ -69,15 +63,17 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
   String slider_label_unit = " s";
   int slider_label_division = 1;
 
+  late ApiService apiRequest = ApiService();
+
   void _handleRadioValueChanged(int index) {
     setState(() {
       _selectedIndex = index;
 
-      _withdrawal_timelock_value = 600.0;
-      _payment_clawback_value = 1200.0;
-      _rekey_timelock_value = 300.0;
-      _rekey_clawback_value = 600.0;
-      _rekey_penalty_value = 900.0;
+      withdrawal_timelock_value = 600.0;
+      payment_clawback_value = 1200.0;
+      rekey_timelock_value = 300.0;
+      rekey_clawback_value = 600.0;
+      rekey_penalty_value = 900.0;
 
       switch (_selectedIndex) {
         case 0:
@@ -276,13 +272,13 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     child: Slider(
                       min: min_withdrawal_timelock_value,
                       max: max_value,
-                      value: _withdrawal_timelock_value,
+                      value: withdrawal_timelock_value,
                       divisions: divisions_value,
                       label:
-                          '${(_withdrawal_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
+                          '${(withdrawal_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
-                          _withdrawal_timelock_value = value;
+                          withdrawal_timelock_value = value;
                           saved_withdrawal_timelock_value = value;
                         });
                       },
@@ -304,13 +300,13 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     child: Slider(
                       min: min_payment_clawback_value,
                       max: max_value,
-                      value: _payment_clawback_value,
+                      value: payment_clawback_value,
                       divisions: divisions_value,
                       label:
-                          '${(_payment_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
+                          '${(payment_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
-                          _payment_clawback_value = value;
+                          payment_clawback_value = value;
                           saved_payment_clawback_value = value;
                         });
                       },
@@ -332,13 +328,13 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     child: Slider(
                       min: min_rekey_timelock_value,
                       max: max_value,
-                      value: _rekey_timelock_value,
+                      value: rekey_timelock_value,
                       divisions: divisions_value,
                       label:
-                          '${(_rekey_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
+                          '${(rekey_timelock_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
-                          _rekey_timelock_value = value;
+                          rekey_timelock_value = value;
                           saved_rekey_timelock_value = value;
                         });
                       },
@@ -360,13 +356,13 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     child: Slider(
                       min: min_rekey_clawback_value,
                       max: max_value,
-                      value: _rekey_clawback_value,
+                      value: rekey_clawback_value,
                       divisions: divisions_value,
                       label:
-                          '${(_rekey_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
+                          '${(rekey_clawback_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
-                          _rekey_clawback_value = value;
+                          rekey_clawback_value = value;
                           saved_rekey_clawback_value = value;
                         });
                       },
@@ -388,13 +384,13 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                     child: Slider(
                       min: min_rekey_penalty_value,
                       max: max_value,
-                      value: _rekey_penalty_value,
+                      value: rekey_penalty_value,
                       divisions: divisions_value,
                       label:
-                          '${(_rekey_penalty_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
+                          '${(rekey_penalty_value.round() / slider_label_division).toStringAsFixed(0)}$slider_label_unit',
                       onChanged: (value) {
                         setState(() {
-                          _rekey_penalty_value = value;
+                          rekey_penalty_value = value;
                           saved_rekey_penalty_value = value;
                         });
                       },
@@ -412,14 +408,19 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                   onPressed: () {
                     setState(() {
                       isLoading = true;
+                      apiRequest.init(
+                          withdrawal_timelock_value,
+                          payment_clawback_value,
+                          rekey_timelock_value,
+                          rekey_clawback_value,
+                          rekey_penalty_value,
+                          widget.pubKeyListString,
+                          widget.currentLockLevel.toString(),
+                          widget.maximumLockLevel.toString());
                     });
 
-                    // we had used future delayed to stop loading after
-                    // 3 seconds and show text "submit" on the screen.
-                    Future.delayed(const Duration(seconds: 3), () {
-                      setState(() {
-                        isLoading = false;
-                      });
+                    setState(() {
+                      isLoading = false;
                     });
                   },
                   child: isLoading
@@ -481,5 +482,3 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
     return formattedDuration;
   }
 }
-
-class OutlineButton {}
