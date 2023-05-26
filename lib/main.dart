@@ -6,6 +6,7 @@ import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 import 'package:seedsaver_wallet/widgets/not_yet_implemented_widget.dart';
 import 'package:seedsaver_wallet/widgets/vault_init_widget.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
+import 'package:seedsaver_wallet/views/settingsview.dart';
 
 late ObjectBox objectbox;
 
@@ -65,6 +66,9 @@ class _HomePageState extends State<HomePage> {
       case 3:
         page = NotYetImplementedCard();
         break;
+      case 4:
+        page = SettingsPage();
+        break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -104,6 +108,10 @@ class _HomePageState extends State<HomePage> {
                         icon: Icon(Icons.safety_check),
                         label: 'Vaults',
                       ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.settings),
+                        label: 'Settings',
+                      ),
                     ],
                     currentIndex: selectedIndex,
                     onTap: (value) {
@@ -137,6 +145,10 @@ class _HomePageState extends State<HomePage> {
                       NavigationRailDestination(
                         icon: Icon(Icons.safety_check),
                         label: Text('Vaults'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.settings),
+                        label: Text('Settings'),
                       ),
                     ],
                     selectedIndex: selectedIndex,
