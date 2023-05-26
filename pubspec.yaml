@@ -10,8 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  flutter_credit_card: ^3.0.1 
-  english_words: ^4.0.0
   provider: ^6.0.0
   flutter_zxing: ^1.2.0
   base32: ^2.1.3

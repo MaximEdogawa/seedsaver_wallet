@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:seedsaver_wallet/views/qrview.dart';
 import 'package:seedsaver_wallet/widgets/load_createQr_widget.dart';
 import 'package:seedsaver_wallet/widgets/not_yet_implemented_widget.dart';
+import 'package:seedsaver_wallet/views/vaultview.dart';
 import 'package:seedsaver_wallet/widgets/vault_init_widget.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/views/settingsview.dart';
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
         page = QRView(objectbox: objectbox);
         break;
       case 3:
-        page = NotYetImplementedCard();
+        page = VaultPage(objectbox: objectbox);
         break;
       case 4:
         page = SettingsPage();
@@ -84,7 +85,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.maxWidth < 450) {
+          if (constraints.maxWidth < 550) {
             return Column(
               children: [
                 Expanded(child: mainArea),
@@ -128,7 +129,6 @@ class _HomePageState extends State<HomePage> {
               children: [
                 SafeArea(
                   child: NavigationRail(
-                    extended: constraints.maxWidth >= 600,
                     destinations: const [
                       NavigationRailDestination(
                         icon: Icon(Icons.wallet),

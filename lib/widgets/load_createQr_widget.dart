@@ -122,6 +122,10 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("QR Show"),
+        backgroundColor: Colors.green,
+      ),
       body: chunks.isEmpty
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
