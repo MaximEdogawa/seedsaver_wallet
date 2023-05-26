@@ -2,20 +2,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 
+import '../widgets/unsupported_platform_widget.dart';
 import '../widgets/debug_info_widget.dart';
 import '../widgets/scan_result_widget.dart';
-import '../widgets/unsupported_platform_widget.dart';
+import '../widgets/pubkeys_selection_widget.dart';
 
 import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:base32/base32.dart';
+import 'package:seedsaver_wallet/store/data_store.dart';
 
+const IS_PUB_KEY = "bls";
 const PBKDF2_ROUNDS = 2048;
 // Size of in bytes for each header section
 Map<String, int> headerSize = {'mode': 1, 'chunk': 2, 'chunks': 2};
 
 class QRView extends StatefulWidget {
-  const QRView({Key? key}) : super(key: key);
+  const QRView({
+    Key? key,
+    this.objectbox,
+  }) : super(key: key);
+
+  final ObjectBox? objectbox;
 
   @override
   State<QRView> createState() => _QRViewState();
@@ -45,9 +53,6 @@ class _QRViewState extends State<QRView> {
     final isCameraSupported = defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scan Code'),
-      ),
       body: Stack(
         children: [
           if (kIsWeb)
@@ -56,11 +61,18 @@ class _QRViewState extends State<QRView> {
             const Center(
               child: Text('Camera not supported on this platform'),
             )
+          else if (result != null &&
+              result?.isValid == true &&
+              result!.text!.startsWith(IS_PUB_KEY))
+            PubkeyResultWidget(
+                result: result,
+                onScanAgain: () => setState(() => result = null),
+                objectbox: widget.objectbox)
           else if (result != null && result?.isValid == true)
             ScanResultWidget(
-              result: result,
-              onScanAgain: () => setState(() => result = null),
-            )
+                result: result,
+                onScanAgain: () => setState(() => result = null),
+                objectbox: widget.objectbox)
           else
             ReaderWidget(
               onScan: _onScanSuccess,
