@@ -7,6 +7,8 @@ import 'package:seedsaver_wallet/widgets/custom_slider_widget.dart';
 import 'package:seedsaver_wallet/widgets/custom_radio_group_widget.dart';
 import 'package:seedsaver_wallet/services/api_service.dart';
 
+import '../objectbox.g.dart';
+
 bool _isSelected = false;
 
 class VaultInitWidget extends StatefulWidget {
@@ -15,11 +17,13 @@ class VaultInitWidget extends StatefulWidget {
     required this.pubKeyListString,
     required this.currentLockLevel,
     required this.maximumLockLevel,
+    required this.objectbox,
   }) : super(key: key);
 
   late List<String>? pubKeyListString;
   final int currentLockLevel;
   final int maximumLockLevel;
+  final ObjectBox? objectbox;
 
   @override
   _VaultInitWidgetState createState() => _VaultInitWidgetState();
@@ -408,15 +412,27 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                   onPressed: () {
                     setState(() {
                       isLoading = true;
-                      apiRequest.init(
-                          withdrawal_timelock_value,
-                          payment_clawback_value,
-                          rekey_timelock_value,
-                          rekey_clawback_value,
-                          rekey_penalty_value,
+                      dynamic response = apiRequest.init(
+                          withdrawal_timelock_value.toInt().toString(),
+                          payment_clawback_value.toInt().toString(),
+                          rekey_timelock_value.toInt().toString(),
+                          rekey_clawback_value.toInt().toString(),
+                          rekey_penalty_value.toInt().toString(),
                           widget.pubKeyListString,
                           widget.currentLockLevel.toString(),
                           widget.maximumLockLevel.toString());
+                      if (response['Success'] == "true") {
+                        final vaultBox = widget.objectbox?.store.box<Vault>();
+                        Vault? vault = Vault();
+                        final query = vaultBox?.query(Vault_.singeltonHex
+                            .equals(response['launched_singelton_hex']));
+                        final result = query?.build().findFirst();
+                        if (result == null) {
+                          vault.singeltonHex =
+                              response['launched_singelton_hex'];
+                          vaultBox?.put(vault);
+                        }
+                      }
                     });
 
                     setState(() {

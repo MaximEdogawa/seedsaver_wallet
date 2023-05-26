@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
+import 'package:seedsaver_wallet/objectbox.g.dart';
 
 import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/models/data_model.dart';
@@ -34,7 +35,8 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
   double currentLockLevel_value = 1.0;
   int saved_curretnLockLevel = 1;
   int saved_maximumLockLevel = 1;
-  int max_length = 1;
+  int maxLength = 1;
+
   @override
   void initState() {
     super.initState();
@@ -42,9 +44,15 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
     isContinue = false;
 
     Pubkey? pubKey = Pubkey();
+
     if (widget.result != null) {
-      pubKey.key = widget.result?.text ?? '';
-      pubKeyBox?.put(pubKey);
+      final query =
+          pubKeyBox?.query(Pubkey_.key.equals(widget.result?.text ?? ''));
+      final result = query?.build().findFirst();
+      if (result == null) {
+        pubKey.key = widget.result?.text ?? '';
+        pubKeyBox?.put(pubKey);
+      }
     }
 
     int? length = setPubKeyList(pubKeyBox);
@@ -91,18 +99,17 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                               onChanged: (value) {
                                 setState(() {
                                   checkedList[index] = value!;
-                                  max_length = 1;
+                                  maxLength = 1;
                                   for (int i = 0; i < checkedList.length; i++) {
                                     if (checkedList[i] == true) {
-                                      max_length++;
+                                      maxLength++;
                                     }
                                   }
-                                  if (max_length > 1) {
-                                    max_length--;
-                                  } else {
-                                    max_length = 1;
+                                  maxLength--;
+                                  if (maxLength < 1) {
+                                    maxLength = 1;
                                   }
-                                  saved_maximumLockLevel = max_length;
+                                  saved_maximumLockLevel = maxLength;
                                 });
                               },
                             );
@@ -120,9 +127,9 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                               context: context,
                               child: Slider(
                                 min: 1.0,
-                                max: (1.0 * max_length),
+                                max: (1.0 * maxLength),
                                 value: currentLockLevel_value,
-                                divisions: max_length,
+                                divisions: maxLength,
                                 label: saved_curretnLockLevel.toString(),
                                 onChanged: (value) {
                                   setState(() {
@@ -157,7 +164,8 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
             VaultInitWidget(
                 pubKeyListString: getPubKeyList(),
                 currentLockLevel: saved_curretnLockLevel,
-                maximumLockLevel: saved_curretnLockLevel)
+                maximumLockLevel: saved_maximumLockLevel,
+                objectbox: widget.objectbox)
         ],
       ),
     );
@@ -174,7 +182,7 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
       final pubKeyBox = widget.objectbox?.store.box<Pubkey>();
       pubKeyBox?.removeAll();
       setPubKeyList(pubKeyBox);
-      max_length = 1;
+      maxLength = 0;
     });
   }
 
