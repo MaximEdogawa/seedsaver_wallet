@@ -13,23 +13,28 @@ class VaultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       appBar: AppBar(
         title: const Text("Vaults"),
         backgroundColor: Colors.green,
       ),
       body: Center(
-          child: ElevatedButton(
-        child: const Text("Add Vault"),
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: ((context) =>
-                      CreateVaultPage(objectbox: objectbox))));
-        },
-      )),
-    );
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: ((context) =>
+                        CreateVaultPage(objectbox: objectbox))));
+          },
+          icon: Icon(Icons.add),
+          label: Text('Add Vault'), 
+        ),
+      ),
+    ));
   }
 }
 
@@ -42,12 +47,16 @@ class CreateVaultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       appBar: AppBar(
         title: const Text("Add Vault"),
         backgroundColor: Colors.green,
+        actions:[IconButton(onPressed: (){
+                Navigator.pop(context);
+            },icon:const Icon(Icons.close))]
       ),
       body: Center(child: QRView(objectbox: objectbox)),
-    );
+    ));
   }
 }

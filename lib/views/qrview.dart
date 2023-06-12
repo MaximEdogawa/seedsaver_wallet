@@ -52,7 +52,8 @@ class _QRViewState extends State<QRView> {
   Widget build(BuildContext context) {
     final isCameraSupported = defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android;
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       body: Stack(
         children: [
           if (kIsWeb)
@@ -100,7 +101,7 @@ class _QRViewState extends State<QRView> {
             ),
         ],
       ),
-    );
+    ));
   }
 
   _onScanSuccess(Code? code) {

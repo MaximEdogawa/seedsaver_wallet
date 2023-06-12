@@ -1,4 +1,5 @@
 // ignore: file_names
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:seedsaver_wallet/store/data_store.dart';
@@ -421,20 +422,8 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                           widget.pubKeyListString,
                           widget.currentLockLevel.toString(),
                           widget.maximumLockLevel.toString());
-                      if (response['Success'] == "true") {
-                        final vaultBox = widget.objectbox?.store.box<Vault>();
-                        Vault? vault = Vault();
-                        final query = vaultBox?.query(Vault_.singeltonHex
-                            .equals(response['launched_singelton_hex']));
-                        final result = query?.build().findFirst();
-                        if (result == null) {
-                          vault.singeltonHex =
-                              response['launched_singelton_hex'];
-                          vaultBox?.put(vault);
-                        }
-                      }
                     });
-
+                    sendResponse();
                     setState(() {
                       isLoading = false;
                     });
@@ -496,5 +485,37 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
     }
 
     return formattedDuration;
+  }
+
+  sendResponse() async {
+    Map<String, dynamic> jsonResponse = {"Succes": "false"};
+    String response = await apiRequest.init(
+        withdrawal_timelock_value.toInt().toString(),
+        payment_clawback_value.toInt().toString(),
+        rekey_timelock_value.toInt().toString(),
+        rekey_clawback_value.toInt().toString(),
+        rekey_penalty_value.toInt().toString(),
+        widget.pubKeyListString,
+        widget.currentLockLevel.toString(),
+        widget.maximumLockLevel.toString());
+    if (response != "") {
+      jsonResponse = jsonDecode(response);
+    }
+    loggerNoStack.i("Response code: ", response);
+    if (jsonResponse["Success"] == "true") {
+      final vaultBox = widget.objectbox?.store.box<Vault>();
+      isLoading = false;
+      Vault? vault = Vault();
+      final query = vaultBox?.query(
+          Vault_.singeltonHex.equals(jsonResponse['launched_singelton_hex']));
+      final result = query?.build().findFirst();
+      if (result == null) {
+        vault.singeltonHex = jsonResponse['launched_singelton_hex'];
+        vaultBox?.put(vault);
+      }
+    } else {
+      loggerNoStack.e("Error response code:", response.toString());
+    }
+    isLoading = false;
   }
 }

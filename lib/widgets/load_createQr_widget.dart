@@ -121,7 +121,8 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       appBar: AppBar(
         title: const Text("QR Show"),
         backgroundColor: Colors.green,
@@ -134,7 +135,7 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
                 Center(
                   child: FloatingActionButton.extended(
                     backgroundColor: Colors.green,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     onPressed: () {
                       _loadFile();
                     },
@@ -210,7 +211,7 @@ class _FileTransferWidgetState extends State<FileTransferWidget> {
                 ),
               ],
             ),
-    );
+    ));
   }
 
   String encodeData(
