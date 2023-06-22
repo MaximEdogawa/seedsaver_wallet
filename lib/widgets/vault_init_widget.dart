@@ -423,7 +423,7 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                           widget.currentLockLevel.toString(),
                           widget.maximumLockLevel.toString());
                     });
-                    sendResponse();
+                    sendReponse();
                     setState(() {
                       isLoading = false;
                     });
