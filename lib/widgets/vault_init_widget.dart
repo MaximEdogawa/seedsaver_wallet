@@ -70,6 +70,38 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
 
   late ApiService apiRequest = ApiService();
 
+  void _sendResponse() async {
+    Map<String, dynamic> jsonResponse = {"Succes": "false"};
+    String response = await apiRequest.init(
+        withdrawal_timelock_value.toInt().toString(),
+        payment_clawback_value.toInt().toString(),
+        rekey_timelock_value.toInt().toString(),
+        rekey_clawback_value.toInt().toString(),
+        rekey_penalty_value.toInt().toString(),
+        widget.pubKeyListString,
+        widget.currentLockLevel.toString(),
+        widget.maximumLockLevel.toString());
+    if (response != "") {
+      jsonResponse = jsonDecode(response);
+    }
+    loggerNoStack.i("Response code: ", response);
+    if (jsonResponse["Success"] == "true") {
+      final vaultBox = widget.objectbox?.store.box<Vault>();
+      isLoading = false;
+      Vault? vault = Vault();
+      final query = vaultBox?.query(
+          Vault_.singeltonHex.equals(jsonResponse['launched_singelton_hex']));
+      final result = query?.build().findFirst();
+      if (result == null) {
+        vault.singeltonHex = jsonResponse['launched_singelton_hex'];
+        vaultBox?.put(vault);
+      }
+    } else {
+      loggerNoStack.e("Error response code:", response.toString());
+    }
+    isLoading = false;
+  }
+
   void _handleRadioValueChanged(int index) {
     setState(() {
       _selectedIndex = index;
@@ -413,17 +445,8 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
                   onPressed: () {
                     setState(() {
                       isLoading = true;
-                      dynamic response = apiRequest.init(
-                          withdrawal_timelock_value.toInt().toString(),
-                          payment_clawback_value.toInt().toString(),
-                          rekey_timelock_value.toInt().toString(),
-                          rekey_clawback_value.toInt().toString(),
-                          rekey_penalty_value.toInt().toString(),
-                          widget.pubKeyListString,
-                          widget.currentLockLevel.toString(),
-                          widget.maximumLockLevel.toString());
                     });
-                    sendReponse();
+                    _sendResponse();
                     setState(() {
                       isLoading = false;
                     });
@@ -485,37 +508,5 @@ class _VaultInitWidgetState extends State<VaultInitWidget> {
     }
 
     return formattedDuration;
-  }
-
-  sendResponse() async {
-    Map<String, dynamic> jsonResponse = {"Succes": "false"};
-    String response = await apiRequest.init(
-        withdrawal_timelock_value.toInt().toString(),
-        payment_clawback_value.toInt().toString(),
-        rekey_timelock_value.toInt().toString(),
-        rekey_clawback_value.toInt().toString(),
-        rekey_penalty_value.toInt().toString(),
-        widget.pubKeyListString,
-        widget.currentLockLevel.toString(),
-        widget.maximumLockLevel.toString());
-    if (response != "") {
-      jsonResponse = jsonDecode(response);
-    }
-    loggerNoStack.i("Response code: ", response);
-    if (jsonResponse["Success"] == "true") {
-      final vaultBox = widget.objectbox?.store.box<Vault>();
-      isLoading = false;
-      Vault? vault = Vault();
-      final query = vaultBox?.query(
-          Vault_.singeltonHex.equals(jsonResponse['launched_singelton_hex']));
-      final result = query?.build().findFirst();
-      if (result == null) {
-        vault.singeltonHex = jsonResponse['launched_singelton_hex'];
-        vaultBox?.put(vault);
-      }
-    } else {
-      loggerNoStack.e("Error response code:", response.toString());
-    }
-    isLoading = false;
   }
 }
