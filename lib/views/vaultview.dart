@@ -1,185 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_credit_card/flutter_credit_card.dart';
+import 'package:seedsaver_wallet/views/qrview.dart';
 
-const double kCardHeight = 225;
-const double kCardWidth = 356;
+import '../store/data_store.dart';
 
-const double kSpaceBetweenCard = 24;
-const double kSpaceBetweenUnselectCard = 32;
-const double kSpaceUnselectedCardToTop = 320;
-
-const Duration kAnimationDuration = Duration(milliseconds: 245);
-
-class VaultCardData {
-  VaultCardData({required this.backgroundColor});
-  final Color backgroundColor;
-}
-
-class VaultPage extends StatefulWidget {
+class VaultPage extends StatelessWidget {
   const VaultPage({
     Key? key,
-    this.cardsData = const [],
-    this.space = kSpaceBetweenCard,
+    this.objectbox,
   }) : super(key: key);
 
-  final List<VaultCardData> cardsData;
-  final double space;
-
-  @override
-  State<VaultPage> createState() => _VaultPageState();
-}
-
-class _VaultPageState extends State<VaultPage> {
-  int? selectedCardIndex;
-
-  late final List<VaultCard> vaultCards;
-
-  @override
-  void initState() {
-    super.initState();
-
-    vaultCards = widget.cardsData
-        .map((data) => VaultCard(
-              backgroundColor: data.backgroundColor,
-            ))
-        .toList();
-  }
-
-  int toUnselectedCardPositionIndex(int indexInAllList) {
-    if (selectedCardIndex != null) {
-      if (indexInAllList < selectedCardIndex!) {
-        return indexInAllList;
-      } else {
-        return indexInAllList - 1;
-      }
-    } else {
-      throw 'Wrong usage';
-    }
-  }
-
-  double _getCardTopPosititoned(int index, isSelected) {
-    if (selectedCardIndex != null) {
-      if (isSelected) {
-        return widget.space;
-      } else {
-        /// Space from top to place put unselect cards.
-        return kSpaceUnselectedCardToTop +
-            toUnselectedCardPositionIndex(index) * kSpaceBetweenUnselectCard;
-      }
-    } else {
-      /// Top first emptySpace + CardSpace + emptySpace + ...
-      return widget.space + index * kCardHeight + index * widget.space;
-    }
-  }
-
-  double _getCardScale(int index, isSelected) {
-    if (selectedCardIndex != null) {
-      if (isSelected) {
-        return 1.0;
-      } else {
-        int totalUnselectCard = vaultCards.length - 1;
-        return 1.0 -
-            (totalUnselectCard - toUnselectedCardPositionIndex(index) - 1) *
-                0.05;
-      }
-    } else {
-      return 1.0;
-    }
-  }
-
-  void unSelectCard() {
-    setState(() {
-      selectedCardIndex = null;
-    });
-  }
-
-  double totalHeightTotalCard() {
-    if (selectedCardIndex == null) {
-      final totalCard = vaultCards.length;
-      return widget.space * (totalCard + 1) + kCardHeight * totalCard;
-    } else {
-      return kSpaceUnselectedCardToTop +
-          kCardHeight +
-          (vaultCards.length - 2) * kSpaceBetweenUnselectCard +
-          kSpaceBetweenCard;
-    }
-  }
+  final ObjectBox? objectbox;
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
-    return Scaffold(
+    return MaterialApp(
+        home: Scaffold(
       appBar: AppBar(
-        title: const Text(''),
+        title: const Text("Vaults"),
+        backgroundColor: Colors.green,
       ),
-      body: SizedBox.expand(
-        child: SingleChildScrollView(
-          child: Stack(
-            children: [
-              AnimatedContainer(
-                duration: kAnimationDuration,
-                height: totalHeightTotalCard(),
-                width: mediaQuery.size.width,
-              ),
-              for (int i = 0; i < vaultCards.length; i++)
-                AnimatedPositioned(
-                  top: _getCardTopPosititoned(i, i == selectedCardIndex),
-                  duration: kAnimationDuration,
-                  child: AnimatedScale(
-                    scale: _getCardScale(i, i == selectedCardIndex),
-                    duration: kAnimationDuration,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedCardIndex = i;
-                        });
-                      },
-                      child: vaultCards[i],
-                    ),
-                  ),
-                ),
-              if (selectedCardIndex != null)
-                Positioned.fill(
-                    child: GestureDetector(
-                  onVerticalDragEnd: (_) {
-                    unSelectCard();
-                  },
-                  onVerticalDragStart: (_) {
-                    unSelectCard();
-                  },
-                ))
-            ],
-          ),
+      body: Center(
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: ((context) =>
+                        CreateVaultPage(objectbox: objectbox))));
+          },
+          icon: Icon(Icons.add),
+          label: Text('Add Vault'), 
         ),
       ),
-    );
+    ));
   }
 }
 
-class VaultCard extends StatelessWidget {
-  const VaultCard({
+class CreateVaultPage extends StatelessWidget {
+  const CreateVaultPage({
     Key? key,
-    required this.backgroundColor,
+    this.objectbox,
   }) : super(key: key);
-
-  final Color backgroundColor;
+  final ObjectBox? objectbox;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CreditCardWidget(
-        cardNumber: '374245455400126',
-        expiryDate: '05/2023',
-        cardHolderName: 'Leo',
-        cvvCode: '123',
-        showBackView: false,
-        isSwipeGestureEnabled: false,
-        height: kCardHeight,
-        width: kCardWidth,
-        cardBgColor: backgroundColor,
-        onCreditCardWidgetChange: (_) {},
+    return MaterialApp(
+        home: Scaffold(
+      appBar: AppBar(
+        title: const Text("Add Vault"),
+        backgroundColor: Colors.green,
+        actions:[IconButton(onPressed: (){
+                Navigator.pop(context);
+            },icon:const Icon(Icons.close))]
       ),
-    );
+      body: Center(child: QRView(objectbox: objectbox)),
+    ));
   }
 }

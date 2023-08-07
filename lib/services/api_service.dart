@@ -9,7 +9,7 @@ class ApiService {
   var loggerNoStack = Logger(
     printer: PrettyPrinter(methodCount: 0),
   );
-  Future<dynamic> init(
+  Future<String> init(
       withdrawTimelock,
       paymentClawback,
       rekeyTimelock,
@@ -44,14 +44,14 @@ class ApiService {
 
     try {
       if (response.statusCode == 200) {
-        loggerNoStack.i(jsonDecode(response.body));
-        return (jsonDecode(response.body));
+        loggerNoStack.i('Request Success:', jsonDecode(response.body));
+        return (response.body);
       } else {
         loggerNoStack.i('Request failed with status: ${response.statusCode}');
       }
     } catch (e) {
       loggerNoStack.i(e.toString());
     }
-    return "";
+    return '"Success": "false"';
   }
 }
