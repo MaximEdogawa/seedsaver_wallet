@@ -20,10 +20,12 @@ Map<String, int> headerSize = {'mode': 1, 'chunk': 2, 'chunks': 2};
 class QRView extends StatefulWidget {
   const QRView({
     Key? key,
-    this.objectbox,
+    required this.objectbox,
+    this.isMultiScan = false,
   }) : super(key: key);
 
   final ObjectBox? objectbox;
+  final bool isMultiScan;
 
   @override
   State<QRView> createState() => _QRViewState();
@@ -34,8 +36,7 @@ class _QRViewState extends State<QRView> {
 
   Code? result;
   Codes? multiResult;
-
-  bool isMultiScan = true;
+  bool isMultiScan = false;
 
   bool showDebugInfo = false;
   int successScans = 0;
@@ -47,6 +48,12 @@ class _QRViewState extends State<QRView> {
   int collectedChunks = 0;
   int progressTotalChunks = 1;
   int progressCollectedChunks = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    isMultiScan = this.widget.isMultiScan;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +222,7 @@ class _QRViewState extends State<QRView> {
     return bytes.fold(0, (result, byte) => (result << 8) + byte);
   }
 
-  //Review code and find a hashing alogithm that works both on python and flutter
+  //Review code and find a hashing alogrithm that works both on python and flutter
   List<int> pbkdf2HmacSHA512(String message, int rounds) {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha512(),

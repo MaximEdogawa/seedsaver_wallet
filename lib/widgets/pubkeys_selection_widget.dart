@@ -7,6 +7,7 @@ import 'package:seedsaver_wallet/store/data_store.dart';
 import 'package:seedsaver_wallet/models/data_model.dart';
 import 'package:seedsaver_wallet/widgets/vault_init_widget.dart';
 import 'package:seedsaver_wallet/widgets/custom_slider_widget.dart';
+import 'package:seedsaver_wallet/views/qrview.dart';
 
 class PubkeyResultWidget extends StatefulWidget {
   const PubkeyResultWidget({
@@ -76,10 +77,24 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: widget.onScanAgain,
-                        child: const Text('Scan Another'),
-                      ),
+                      if (widget.onScanAgain == null)
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: ((context) => ScanQRPage(
+                                        objectbox: widget.objectbox,
+                                        isMultiScan: false))));
+                          },
+                          child:
+                              const Text('Scan QR Pub Key for Vault creation'),
+                        )
+                      else
+                        ElevatedButton(
+                          onPressed: widget.onScanAgain,
+                          child: const Text('Scan Another'),
+                        ),
                       ElevatedButton(
                         onPressed: () {
                           _onDeletePubkeyList();
@@ -127,9 +142,9 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
                               context: context,
                               child: Slider(
                                 min: 1.0,
-                                max: (1.0 * maxLength),
+                                max: (1.0 * (maxLength > 0 ? maxLength : 1)),
                                 value: currentLockLevel_value,
-                                divisions: maxLength,
+                                divisions: maxLength > 0 ? maxLength : 1,
                                 label: saved_curretnLockLevel.toString(),
                                 onChanged: (value) {
                                   setState(() {
@@ -207,5 +222,30 @@ class _PubkeyResultWidgetState extends State<PubkeyResultWidget> {
       }
     }
     return pubKeyListString;
+  }
+}
+
+class ScanQRPage extends StatelessWidget {
+  const ScanQRPage({Key? key, this.objectbox, this.isMultiScan = false})
+      : super(key: key);
+  final ObjectBox? objectbox;
+  final bool isMultiScan;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        home: Scaffold(
+            appBar: AppBar(
+                title: const Text("Add Vault"),
+                backgroundColor: Colors.green,
+                actions: [
+                  IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close))
+                ]),
+            body: Center(
+                child: QRView(objectbox: objectbox, isMultiScan: false))));
   }
 }

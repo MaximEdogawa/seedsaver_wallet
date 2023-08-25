@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:seedsaver_wallet/views/qrview.dart';
+import '../widgets/pubkeys_selection_widget.dart';
+import '../widgets/pubkeys_selection_widget.dart';
 
 import '../store/data_store.dart';
 
@@ -31,7 +32,7 @@ class VaultPage extends StatelessWidget {
                         CreateVaultPage(objectbox: objectbox))));
           },
           icon: Icon(Icons.add),
-          label: Text('Add Vault'), 
+          label: Text('Add Vault'),
         ),
       ),
     ));
@@ -49,14 +50,18 @@ class CreateVaultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-      appBar: AppBar(
-        title: const Text("Add Vault"),
-        backgroundColor: Colors.green,
-        actions:[IconButton(onPressed: (){
-                Navigator.pop(context);
-            },icon:const Icon(Icons.close))]
-      ),
-      body: Center(child: QRView(objectbox: objectbox)),
-    ));
+            appBar: AppBar(
+                title: const Text("Add Vault"),
+                backgroundColor: Colors.green,
+                actions: [
+                  IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.close))
+                ]),
+            body: Center(
+                child: PubkeyResultWidget(
+                    result: null, onScanAgain: null, objectbox: objectbox))));
   }
 }
